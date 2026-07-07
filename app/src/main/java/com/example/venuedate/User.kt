@@ -18,5 +18,6 @@ data class User(
     val currentVenueId: String? = null,
     val lastLat: Double = 0.0,
     val lastLng: Double = 0.0,
-    val availableUntil: Long = 0
+    val availableUntil: Long = 0,
+    val isCompatibilityModeActive: Boolean = false
 )

@@ -41,6 +41,21 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="#777777" />
+
+        <TextView
+            android:id="@+id/tvCompatibilityBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/rounded_bubble_sent"
+            android:backgroundTint="#FF9800"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="🔥 Top Match!"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <Button
