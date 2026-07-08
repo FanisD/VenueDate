@@ -156,8 +156,8 @@ class DiscoveryActivity : AppCompatActivity() {
             if (location != null) {
                 val updates = hashMapOf<String, Any>(
                     "isAvailable" to true,
-                    "lastLat" to location.latitude,
-                    "lastLng" to location.longitude,
+                    "lastLat" to fuzzLocation(location.latitude),
+                    "lastLng" to fuzzLocation(location.longitude),
                     "locationContext" to contextText,
                     "availableUntil" to System.currentTimeMillis() + (20 * 60 * 1000),
                     "isCompatibilityModeActive" to isCompatibilityModeActive // Broadcast your mode
@@ -406,5 +406,10 @@ class DiscoveryActivity : AppCompatActivity() {
                     }
                 }
             }
+    }
+
+    private fun fuzzLocation(coordinate: Double): Double {
+        // Rounds to 3 decimal places (approx ~110m radius)
+        return Math.round(coordinate * 1000.0) / 1000.0
     }
 }
