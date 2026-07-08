@@ -1,5 +1,6 @@
 package com.example.venuedate
 
+import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -14,10 +15,11 @@ import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 
 class ChatActivity : AppCompatActivity() {
 
@@ -47,6 +49,9 @@ class ChatActivity : AppCompatActivity() {
         val btnSend = findViewById<ImageButton>(R.id.btnSend)
         val tvCountdown = findViewById<TextView>(R.id.tvCountdown)
 
+        // ADDED: Bind the Report/Block button
+        val btnReportBlock = findViewById<ImageButton>(R.id.btnReportBlock)
+
         adapter = MessageAdapter(messages, auth.currentUser?.uid ?: "")
         rvMessages.layoutManager = LinearLayoutManager(this)
         rvMessages.adapter = adapter
@@ -70,6 +75,11 @@ class ChatActivity : AppCompatActivity() {
                 sendMessage(text)
                 etMessage.text.clear()
             }
+        }
+
+        // ADDED: Trigger safety options dialog when the flag is clicked
+        btnReportBlock.setOnClickListener {
+            showReportBlockDialog()
         }
     }
 
@@ -178,6 +188,56 @@ class ChatActivity : AppCompatActivity() {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
+    }
+
+    // ------------------------------------------------------------------------
+    // TRUST & SAFETY FUNCTIONS (BLOCK / REPORT)
+    // ------------------------------------------------------------------------
+
+    private fun showReportBlockDialog() {
+        val options = arrayOf("Report for Inappropriate Behavior", "Block User", "Cancel")
+
+        AlertDialog.Builder(this)
+            .setTitle("Safety Options")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> submitReport()
+                    1 -> blockUser()
+                    // 2 is Cancel, which does nothing and dismisses automatically
+                }
+            }
+            .show()
+    }
+
+    private fun submitReport() {
+        val myUid = auth.currentUser?.uid ?: return
+        val target = partnerUid ?: return
+
+        val reportData = hashMapOf(
+            "reporter" to myUid,
+            "reportedUser" to target,
+            "reason" to "Inappropriate Behavior",
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        db.collection("reports").add(reportData).addOnSuccessListener {
+            Toast.makeText(this, "Report submitted to admins.", Toast.LENGTH_SHORT).show()
+            // Standard practice: auto-block someone after reporting them
+            blockUser()
+        }
+    }
+
+    private fun blockUser() {
+        val myUid = auth.currentUser?.uid ?: return
+        val target = partnerUid ?: return
+
+        // FieldValue.arrayUnion safely adds the UID to the list without erasing existing ones
+        db.collection("users").document(myUid)
+            .update("blockedUsers", FieldValue.arrayUnion(target))
+            .addOnSuccessListener {
+                Toast.makeText(this, "User blocked. You will no longer see them.", Toast.LENGTH_LONG).show()
+                finish() // Kicks the user out of the chat screen
+            }
     }
 
     override fun onDestroy() {

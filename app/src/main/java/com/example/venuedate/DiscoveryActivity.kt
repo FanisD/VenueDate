@@ -52,6 +52,8 @@ class DiscoveryActivity : AppCompatActivity() {
 
     // ADDED: Local cache tracking parameters for compatibility calculation matching
     private var myHobbies = listOf<String>()
+
+    private var myBlockedUsers = listOf<String>()
     private var isCompatibilityModeActive = false
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -116,6 +118,7 @@ class DiscoveryActivity : AppCompatActivity() {
             val user = doc.toObject(User::class.java)
             if (user != null) {
                 myHobbies = user.hobbies
+                myBlockedUsers = user.blockedUsers
                 adapter.updateMyHobbies(myHobbies)
                 val switchComp = findViewById<SwitchMaterial>(R.id.switchCompatibilityMode)
 
@@ -185,7 +188,7 @@ class DiscoveryActivity : AppCompatActivity() {
 
                 snapshots?.forEach { doc ->
                     val user = doc.toObject(User::class.java)
-                    if (user != null && user.uid != auth.currentUser?.uid) {
+                    if (user != null && user.uid != auth.currentUser?.uid && !myBlockedUsers.contains(user.uid) && !user.blockedUsers.contains(auth.currentUser?.uid)) {
                         val dist = FloatArray(1)
                         Location.distanceBetween(myLat, myLng, user.lastLat, user.lastLng, dist)
 
