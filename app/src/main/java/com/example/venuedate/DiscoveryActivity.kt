@@ -48,6 +48,8 @@ class DiscoveryActivity : AppCompatActivity() {
     private val channelId = "venue_date_radar"
     private val appSessionStartTime = System.currentTimeMillis()
 
+    private val notifiedCompatibleUsers = mutableSetOf<String>()
+
     // ADDED: Local cache tracking parameters for compatibility calculation matching
     private var myHobbies = listOf<String>()
     private var isCompatibilityModeActive = false
@@ -68,7 +70,7 @@ class DiscoveryActivity : AppCompatActivity() {
         createNotificationChannel()
 
         // 1. Setup RecyclerView
-        adapter = NearbyAdapter(nearbyUsersList) { selectedUser -> sendInterest(selectedUser) }
+        adapter = NearbyAdapter(nearbyUsersList, myHobbies) { selectedUser -> sendInterest(selectedUser) }
         val rv = findViewById<RecyclerView>(R.id.rvNearby)
         rv.layoutManager = LinearLayoutManager(this)
         rv.adapter = adapter
@@ -86,9 +88,10 @@ class DiscoveryActivity : AppCompatActivity() {
         val switchComp = findViewById<SwitchMaterial>(R.id.switchCompatibilityMode)
         switchComp.setOnCheckedChangeListener { _, isChecked ->
             isCompatibilityModeActive = isChecked
-            // Force re-trigger location check to refresh list filter parameters immediately
-            if (findViewById<SwitchMaterial>(R.id.switchAmHere).isChecked) {
-                startLiveStatus()
+
+            // Update Firestore instantly so other phones know you are looking
+            auth.currentUser?.uid?.let { uid ->
+                db.collection("users").document(uid).update("isCompatibilityModeActive", isChecked)
             }
         }
 
@@ -113,6 +116,7 @@ class DiscoveryActivity : AppCompatActivity() {
             val user = doc.toObject(User::class.java)
             if (user != null) {
                 myHobbies = user.hobbies
+                adapter.updateMyHobbies(myHobbies)
                 val switchComp = findViewById<SwitchMaterial>(R.id.switchCompatibilityMode)
 
                 if (myHobbies.size >= 10) {
@@ -155,7 +159,8 @@ class DiscoveryActivity : AppCompatActivity() {
                     "lastLat" to location.latitude,
                     "lastLng" to location.longitude,
                     "locationContext" to contextText,
-                    "availableUntil" to System.currentTimeMillis() + (20 * 60 * 1000)
+                    "availableUntil" to System.currentTimeMillis() + (20 * 60 * 1000),
+                    "isCompatibilityModeActive" to isCompatibilityModeActive // Broadcast your mode
                 )
                 db.collection("users").document(uid).update(updates).addOnSuccessListener {
                     listenForNearbyUsers(location.latitude, location.longitude, rangeMeters)
@@ -175,7 +180,9 @@ class DiscoveryActivity : AppCompatActivity() {
                     return@addSnapshotListener
                 }
 
-                val results = mutableListOf<User>()
+                val superMatches = mutableListOf<User>()
+                val regularUsers = mutableListOf<User>()
+
                 snapshots?.forEach { doc ->
                     val user = doc.toObject(User::class.java)
                     if (user != null && user.uid != auth.currentUser?.uid) {
@@ -183,21 +190,33 @@ class DiscoveryActivity : AppCompatActivity() {
                         Location.distanceBetween(myLat, myLng, user.lastLat, user.lastLng, dist)
 
                         if (dist[0] <= rangeMeters) {
-                            // ADDED: Compatibility matching condition filtering block
-                            if (isCompatibilityModeActive) {
-                                // Mathematical set intersection lookup determining shared elements
+
+                            // Check if BOTH users have Compatibility Mode ON
+                            if (isCompatibilityModeActive && user.isCompatibilityModeActive) {
                                 val sharedInterestsCount = user.hobbies.intersect(myHobbies.toSet()).size
+
                                 if (sharedInterestsCount >= 7) {
-                                    results.add(user)
+                                    // Put them in the VIP list!
+                                    superMatches.add(user)
+
+                                    // Send a notification if we haven't already alerted the user about them
+                                    if (!notifiedCompatibleUsers.contains(user.uid)) {
+                                        notifiedCompatibleUsers.add(user.uid)
+                                        triggerLocalNotification("High Compatibility! ${user.firstName} is nearby with $sharedInterestsCount shared interests!")
+                                    }
+                                    return@forEach // Skip adding to regular list
                                 }
-                            } else {
-                                // If mode is off, default back to full geo proximity discovery
-                                results.add(user)
                             }
+
+                            // If they aren't a super match, they go to the regular list
+                            regularUsers.add(user)
                         }
                     }
                 }
-                adapter.updateList(results)
+
+                // Combine the lists: Super Matches go exactly at the top of the feed
+                val combinedList = superMatches + regularUsers
+                adapter.updateList(combinedList)
             }
     }
 
