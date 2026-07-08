@@ -23,7 +23,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // SET THIS TO TRUE
+            isMinifyEnabled = true
+            // ADD THIS to remove unused code/resources and make the app smaller
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

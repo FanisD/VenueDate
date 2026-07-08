@@ -19,5 +19,6 @@ data class User(
     val lastLat: Double = 0.0,
     val lastLng: Double = 0.0,
     val availableUntil: Long = 0,
-    val isCompatibilityModeActive: Boolean = false
+    val isCompatibilityModeActive: Boolean = false,
+    val blockedUsers: List<String> = emptyList()
 )
