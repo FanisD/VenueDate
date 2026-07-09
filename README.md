@@ -21,14 +21,3 @@ VenueDate is a real-time, location-based social discovery and dating app for And
 * **Data Obfuscation:** ProGuard/R8 is enabled for release builds to prevent reverse engineering.
 * **Firestore Security:** Strict rules are enforced limiting read/write access to mutual match documents and user-owned data.
 * **No Hard GPS Tracking:** Coordinates are truncated to 3 decimal places before being written to the database.
-
-## ⚙️ Setup & Installation
-
-1. Clone the repository.
-2. Connect the app to your own Firebase project:
-   * Create a new Firebase project.
-   * Enable Authentication (Google & Email), Firestore, and Storage.
-   * Download the `google-services.json` file and place it in the `app/` directory.
-3. Sync Gradle and run on an Android emulator or physical device.
-
-*Note: `google-services.json` is ignored in Git to protect API keys.*
