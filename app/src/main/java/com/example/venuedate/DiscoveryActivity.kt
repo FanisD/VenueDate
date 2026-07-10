@@ -14,6 +14,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
+import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -109,6 +110,32 @@ class DiscoveryActivity : AppCompatActivity() {
         listenForMatches()
         listenForInboundInterests()
         listenForGlobalMessages()
+
+        // Profile Menu Click Listener
+        val btnProfileMenu = findViewById<View>(R.id.btnProfileMenu)
+        btnProfileMenu.setOnClickListener { view ->
+            val popup = PopupMenu(this, view)
+            popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
+
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_profile -> {
+                        Toast.makeText(this, "Profile screen coming soon", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    R.id.action_appearance -> {
+                        Toast.makeText(this, "Appearance settings coming soon", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    R.id.action_language -> {
+                        Toast.makeText(this, "Language settings coming soon", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
     }
 
     // ADDED: Verification algorithm gate confirming eligibility for Compatibility Mode
@@ -119,7 +146,6 @@ class DiscoveryActivity : AppCompatActivity() {
             if (user != null) {
                 myHobbies = user.hobbies
                 myBlockedUsers = user.blockedUsers
-                adapter.updateMyHobbies(myHobbies)
                 val switchComp = findViewById<SwitchMaterial>(R.id.switchCompatibilityMode)
 
                 if (myHobbies.size >= 10) {
@@ -129,6 +155,16 @@ class DiscoveryActivity : AppCompatActivity() {
                     switchComp.isEnabled = false
                     switchComp.isChecked = false
                     switchComp.text = "Compatibility Mode Locked (${myHobbies.size}/10 Hobbies Picked)"
+                }
+                adapter.updateMyHobbies(myHobbies)
+
+                // ADDED: Load the user's profile picture into the top-right menu button
+                if (user.imageUrls.isNotEmpty()) {
+                    val ivUserProfilePic = findViewById<ImageView>(R.id.ivUserProfilePic)
+                    Glide.with(this)
+                        .load(user.imageUrls[0])
+                        .circleCrop()
+                        .into(ivUserProfilePic)
                 }
             }
         }
