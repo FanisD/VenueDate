@@ -11,6 +11,7 @@
         android:padding="20dp">
 
         <TextView
+            android:id="@+id/tvProfileTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Build Your Profile"
@@ -60,6 +61,26 @@
             android:layout_marginTop="8dp"/>
 
         <Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save and Enter Venue" android:layout_marginTop="32dp" />
+
+        <Button
+            android:id="@+id/btnLogOut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnDeleteAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Account"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#D32F2F"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="32dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </ScrollView>

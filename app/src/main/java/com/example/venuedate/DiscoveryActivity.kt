@@ -120,7 +120,10 @@ class DiscoveryActivity : AppCompatActivity() {
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.action_profile -> {
-                        Toast.makeText(this, "Profile screen coming soon", Toast.LENGTH_SHORT).show()
+                        // Launches the setup activity but tells it to behave as an editor
+                        val intent = Intent(this, ProfileSetupActivity::class.java)
+                        intent.putExtra("EDIT_MODE", true)
+                        startActivity(intent)
                         true
                     }
                     R.id.action_appearance -> {

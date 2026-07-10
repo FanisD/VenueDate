@@ -1,15 +1,19 @@
 package com.example.venuedate
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 
 class ProfileSetupActivity : AppCompatActivity() {
@@ -19,8 +23,11 @@ class ProfileSetupActivity : AppCompatActivity() {
     private val storage = FirebaseStorage.getInstance()
 
     private val imageUris = arrayOfNulls<Uri>(5)
+    private val currentUrls = arrayOfNulls<String>(5) // Tracks existing photos so they aren't overwritten with blanks
     private var currentSlot = 0
     private val selectedHobbies = mutableListOf<String>()
+
+    private var isEditMode = false
 
     private val hobbyList = listOf(
         "Craft Beer", "Cocktails", "Wine Tasting", "Karaoke", "Dancing", "Live Music", "Pub Quizzes", "People Watching", "Electronic Music", "Jazz Clubs",
@@ -42,13 +49,11 @@ class ProfileSetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile_setup)
 
-        for (i in 0..4) {
-            val id = resources.getIdentifier("iv$i", "id", packageName)
-            findViewById<ImageView>(id).setOnClickListener {
-                currentSlot = i
-                pickImageLauncher.launch("image/*")
-            }
-        }
+        isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
+        val tvTitle = findViewById<TextView>(R.id.tvProfileTitle)
+        val btnSave = findViewById<Button>(R.id.btnSaveProfile)
+        val btnLogOut = findViewById<Button>(R.id.btnLogOut)
+        val btnDelete = findViewById<Button>(R.id.btnDeleteAccount)
 
         // Setup Spinners
         val genders = arrayOf("Male", "Female", "Other")
@@ -60,7 +65,16 @@ class ProfileSetupActivity : AppCompatActivity() {
         val vibes = arrayOf("Open to Chat", "Looking for a Spark", "Good Vibes Only")
         findViewById<Spinner>(R.id.spinnerVibe).adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, vibes)
 
-        // Hobby Chips
+        // Image Click Listeners
+        for (i in 0..4) {
+            val id = resources.getIdentifier("iv$i", "id", packageName)
+            findViewById<ImageView>(id).setOnClickListener {
+                currentSlot = i
+                pickImageLauncher.launch("image/*")
+            }
+        }
+
+        // Hobby Chips Setup
         val chipGroup = findViewById<ChipGroup>(R.id.hobbyChipGroup)
         val tvCount = findViewById<TextView>(R.id.tvHobbyCount)
         hobbyList.forEach { hobby ->
@@ -79,39 +93,122 @@ class ProfileSetupActivity : AppCompatActivity() {
             chipGroup.addView(chip)
         }
 
-        findViewById<Button>(R.id.btnSaveProfile).setOnClickListener {
+        // --- EDIT MODE ACTIVATION ---
+        if (isEditMode) {
+            tvTitle.text = "Edit Profile"
+            btnSave.text = "Save Changes"
+            btnLogOut.visibility = View.VISIBLE
+            btnDelete.visibility = View.VISIBLE
+            loadExistingData()
+        }
+
+        btnSave.setOnClickListener {
             val name = findViewById<EditText>(R.id.etFirstName).text.toString().trim()
-            val age = findViewById<EditText>(R.id.etAge).text.toString().trim()
+            val ageStr = findViewById<EditText>(R.id.etAge).text.toString().trim()
             val city = findViewById<EditText>(R.id.etCity).text.toString().trim()
 
-            if (name.isNotEmpty() && age.isNotEmpty() && city.isNotEmpty() && imageUris[0] != null) {
-                uploadAllPhotos(name, age.toInt(), city)
+            // You must either be uploading a new main photo, or already have one saved from before
+            val hasMainPhoto = imageUris[0] != null || !currentUrls[0].isNullOrEmpty()
+
+            if (name.isNotEmpty() && ageStr.isNotEmpty() && city.isNotEmpty() && hasMainPhoto) {
+                uploadAllPhotos(name, ageStr.toInt(), city)
             } else {
                 Toast.makeText(this, "Main photo, Name, Age, and City are required", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnLogOut.setOnClickListener {
+            auth.signOut()
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+        }
+
+        btnDelete.setOnClickListener { confirmAndDeleteAccount() }
+    }
+
+    private fun loadExistingData() {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).get().addOnSuccessListener { doc ->
+            val user = doc.toObject(User::class.java) ?: return@addOnSuccessListener
+
+            findViewById<EditText>(R.id.etFirstName).setText(user.firstName)
+            findViewById<EditText>(R.id.etAge).setText(user.age.toString())
+            findViewById<EditText>(R.id.etCity).setText(user.city)
+            findViewById<EditText>(R.id.etOccupation).setText(user.occupation)
+
+            setSpinnerSelection(R.id.spinnerGender, user.gender)
+            setSpinnerSelection(R.id.spinnerInterestedIn, user.interestedIn)
+            setSpinnerSelection(R.id.spinnerVibe, user.vibeTag)
+
+            // Re-check existing hobbies
+            val chipGroup = findViewById<ChipGroup>(R.id.hobbyChipGroup)
+            for (i in 0 until chipGroup.childCount) {
+                val chip = chipGroup.getChildAt(i) as Chip
+                if (user.hobbies.contains(chip.text.toString())) {
+                    chip.isChecked = true
+                }
+            }
+
+            // Load existing images into the layout
+            user.imageUrls.forEachIndexed { index, url ->
+                if (index < 5) {
+                    currentUrls[index] = url
+                    val imageViewId = resources.getIdentifier("iv$index", "id", packageName)
+                    val imageView = findViewById<ImageView>(imageViewId)
+                    Glide.with(this).load(url).centerCrop().into(imageView)
+                }
+            }
+        }
+    }
+
+    private fun setSpinnerSelection(spinnerId: Int, value: String) {
+        val spinner = findViewById<Spinner>(spinnerId)
+        val adapter = spinner.adapter
+        for (i in 0 until adapter.count) {
+            if (adapter.getItem(i).toString() == value) {
+                spinner.setSelection(i)
+                break
             }
         }
     }
 
     private fun uploadAllPhotos(name: String, age: Int, city: String) {
         val uid = auth.currentUser?.uid ?: return
-        val uploadedUrls = mutableListOf<String>()
-        val activeUris = imageUris.filterNotNull()
-        var completed = 0
+        val indexesToUpload = mutableListOf<Int>()
 
-        activeUris.forEachIndexed { index, uri ->
-            val ref = storage.reference.child("profiles/$uid/img_$index.jpg")
-            ref.putFile(uri).addOnSuccessListener {
+        // Check which specific slots have brand new images
+        for (i in 0..4) {
+            if (imageUris[i] != null) indexesToUpload.add(i)
+        }
+
+        // If they didn't pick any new images, jump straight to saving text data
+        if (indexesToUpload.isEmpty()) {
+            saveUserData(name, age, city)
+            return
+        }
+
+        var completed = 0
+        indexesToUpload.forEach { i ->
+            val ref = storage.reference.child("profiles/$uid/img_$i.jpg")
+            ref.putFile(imageUris[i]!!).addOnSuccessListener {
                 ref.downloadUrl.addOnSuccessListener { downloadUri ->
-                    uploadedUrls.add(downloadUri.toString())
+                    currentUrls[i] = downloadUri.toString() // Replace the old URL with the new one
                     completed++
-                    if (completed == activeUris.size) saveUserData(name, age, city, uploadedUrls)
+                    if (completed == indexesToUpload.size) {
+                        saveUserData(name, age, city)
+                    }
                 }
             }
         }
     }
 
-    private fun saveUserData(name: String, age: Int, city: String, urls: List<String>) {
+    private fun saveUserData(name: String, age: Int, city: String) {
         val uid = auth.currentUser?.uid ?: return
+
+        // Strip out any nulls or blank slots
+        val finalUrls = currentUrls.filterNotNull().filter { it.isNotEmpty() }
+
         val userMap = hashMapOf(
             "uid" to uid,
             "firstName" to name,
@@ -122,13 +219,46 @@ class ProfileSetupActivity : AppCompatActivity() {
             "occupation" to findViewById<EditText>(R.id.etOccupation).text.toString().trim(),
             "vibeTag" to findViewById<Spinner>(R.id.spinnerVibe).selectedItem.toString(),
             "hobbies" to selectedHobbies,
-            "imageUrls" to urls,
+            "imageUrls" to finalUrls,
             "email" to auth.currentUser?.email
         )
 
-        db.collection("users").document(uid).set(userMap).addOnSuccessListener {
-            startActivity(Intent(this, DiscoveryActivity::class.java))
-            finish()
+        // SetOptions.merge() is CRITICAL here so we don't erase location logic or block lists!
+        db.collection("users").document(uid).set(userMap, SetOptions.merge()).addOnSuccessListener {
+            if (isEditMode) {
+                Toast.makeText(this, "Profile Updated!", Toast.LENGTH_SHORT).show()
+                finish() // Close edit mode and go back to Radar
+            } else {
+                startActivity(Intent(this, DiscoveryActivity::class.java))
+                finish() // Standard onboarding forward progression
+            }
         }
+    }
+
+    private fun confirmAndDeleteAccount() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Account")
+            .setMessage("Are you sure? This action is permanent and cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                val uid = auth.currentUser?.uid ?: return@setPositiveButton
+
+                // 1. Delete Firestore Document
+                db.collection("users").document(uid).delete().addOnSuccessListener {
+
+                    // 2. Delete Auth Profile
+                    auth.currentUser?.delete()?.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(this, "Account deleted.", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            })
+                        } else {
+                            Toast.makeText(this, "Session expired. Log out and back in to delete.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }
