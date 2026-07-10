@@ -120,7 +120,6 @@ class DiscoveryActivity : AppCompatActivity() {
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.action_profile -> {
-                        // Launches the setup activity but tells it to behave as an editor
                         val intent = Intent(this, ProfileSetupActivity::class.java)
                         intent.putExtra("EDIT_MODE", true)
                         startActivity(intent)
@@ -130,8 +129,14 @@ class DiscoveryActivity : AppCompatActivity() {
                         Toast.makeText(this, "Appearance settings coming soon", Toast.LENGTH_SHORT).show()
                         true
                     }
-                    R.id.action_language -> {
-                        Toast.makeText(this, "Language settings coming soon", Toast.LENGTH_SHORT).show()
+                    // FIXED: Log Out functionality
+                    R.id.action_logout -> {
+                        auth.signOut()
+                        val intent = Intent(this, MainActivity::class.java).apply {
+                            // This clears the activity stack so the user can't press the "back" button to return to the radar
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
                         true
                     }
                     else -> false
