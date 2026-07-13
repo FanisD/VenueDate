@@ -2,84 +2,188 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background_light"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="48dp">
 
         <TextView
             android:id="@+id/tvProfileTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Build Your Profile"
-            android:textSize="24sp"
+            android:textColor="@color/text_primary"
+            android:textSize="32sp"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:letterSpacing="-0.02"
+            android:layout_marginBottom="24dp"/>
 
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:layout_marginBottom="24dp">
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-                <ImageView android:id="@+id/iv0" android:layout_width="120dp" android:layout_height="160dp" android:background="#DDD" android:layout_margin="4dp" android:scaleType="centerCrop" android:src="@android:drawable/ic_menu_camera"/>
-                <ImageView android:id="@+id/iv1" android:layout_width="100dp" android:layout_height="140dp" android:background="#DDD" android:layout_margin="4dp" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add"/>
-                <ImageView android:id="@+id/iv2" android:layout_width="100dp" android:layout_height="140dp" android:background="#DDD" android:layout_margin="4dp" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add"/>
-                <ImageView android:id="@+id/iv3" android:layout_width="100dp" android:layout_height="140dp" android:background="#DDD" android:layout_margin="4dp" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add"/>
-                <ImageView android:id="@+id/iv4" android:layout_width="100dp" android:layout_height="140dp" android:background="#DDD" android:layout_margin="4dp" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add"/>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="140dp"
+                    android:layout_height="180dp"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/brand_primary">
+                    <ImageView android:id="@+id/iv0" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@android:drawable/ic_menu_camera" android:background="#EFEFEF"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="110dp" android:layout_height="150dp" android:layout_marginEnd="12dp" android:layout_gravity="center_vertical" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="#D0D0D0">
+                    <ImageView android:id="@+id/iv1" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add" android:background="#F5F5F5"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="110dp" android:layout_height="150dp" android:layout_marginEnd="12dp" android:layout_gravity="center_vertical" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="#D0D0D0">
+                    <ImageView android:id="@+id/iv2" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add" android:background="#F5F5F5"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="110dp" android:layout_height="150dp" android:layout_marginEnd="12dp" android:layout_gravity="center_vertical" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="#D0D0D0">
+                    <ImageView android:id="@+id/iv3" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add" android:background="#F5F5F5"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="110dp" android:layout_height="150dp" android:layout_marginEnd="12dp" android:layout_gravity="center_vertical" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="#D0D0D0">
+                    <ImageView android:id="@+id/iv4" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@android:drawable/ic_input_add" android:background="#F5F5F5"/>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </HorizontalScrollView>
 
-        <EditText android:id="@+id/etFirstName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="First Name" android:minHeight="48dp"/>
-        <EditText android:id="@+id/etAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Age" android:inputType="number" android:minHeight="48dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="I am a:" android:layout_marginTop="12dp" android:textStyle="bold"/>
-        <Spinner android:id="@+id/spinnerGender" android:layout_width="match_parent" android:layout_height="48dp" />
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="12dp"
+                android:hint="First Name"
+                app:boxBackgroundColor="@color/surface_card"
+                app:boxCornerRadiusBottomEnd="12dp" app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusTopEnd="12dp" app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/brand_primary">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/etFirstName" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_primary"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Interested in meeting:" android:layout_marginTop="12dp" android:textStyle="bold"/>
-        <Spinner android:id="@+id/spinnerInterestedIn" android:layout_width="match_parent" android:layout_height="48dp" />
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:hint="Age"
+                app:boxBackgroundColor="@color/surface_card"
+                app:boxCornerRadiusBottomEnd="12dp" app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusTopEnd="12dp" app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/brand_primary">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/etAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" android:textColor="@color/text_primary"/>
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
 
-        <EditText android:id="@+id/etCity" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Current City" android:minHeight="48dp" android:layout_marginTop="12dp"/>
-        <EditText android:id="@+id/etOccupation" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Job or Studies" android:minHeight="48dp"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="I am a:" android:layout_marginTop="20dp" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/surface_card" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeColor="#BDBDBD" app:strokeWidth="1dp">
+            <Spinner android:id="@+id/spinnerGender" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="8dp"/>
+        </com.google.android.material.card.MaterialCardView>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Select Your Vibe" android:layout_marginTop="16dp" android:textStyle="bold"/>
-        <Spinner android:id="@+id/spinnerVibe" android:layout_width="match_parent" android:layout_height="48dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Interested in meeting:" android:layout_marginTop="20dp" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/surface_card" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeColor="#BDBDBD" app:strokeWidth="1dp">
+            <Spinner android:id="@+id/spinnerInterestedIn" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="8dp"/>
+        </com.google.android.material.card.MaterialCardView>
 
-        <TextView android:id="@+id/tvHobbyCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Select Interests (0/10)" android:layout_marginTop="16dp" android:textStyle="bold"/>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp"
+            android:hint="Current City"
+            app:boxBackgroundColor="@color/surface_card" app:boxCornerRadiusBottomEnd="12dp" app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusTopEnd="12dp" app:boxCornerRadiusTopStart="12dp" app:boxStrokeColor="@color/brand_primary">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etCity" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_primary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            android:hint="Job or Studies"
+            app:boxBackgroundColor="@color/surface_card" app:boxCornerRadiusBottomEnd="12dp" app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusTopEnd="12dp" app:boxCornerRadiusTopStart="12dp" app:boxStrokeColor="@color/brand_primary">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etOccupation" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_primary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Select Your Vibe" android:layout_marginTop="20dp" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/surface_card" app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeColor="#BDBDBD" app:strokeWidth="1dp">
+            <Spinner android:id="@+id/spinnerVibe" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="8dp"/>
+        </com.google.android.material.card.MaterialCardView>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="32dp" android:layout_marginBottom="24dp" android:background="#E0E0E0" />
+
+        <TextView android:id="@+id/tvHobbyCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Select Interests (0/10)" android:textColor="@color/brand_primary" android:textSize="18sp" android:textStyle="bold"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pick 10 to unlock Compatibility Mode!" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_marginTop="4dp" android:layout_marginBottom="12dp"/>
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/hobbyChipGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:chipSpacingVertical="4dp"
-            app:chipSpacingHorizontal="4dp"
-            android:layout_marginTop="8dp"/>
+            app:chipSpacingVertical="8dp"
+            app:chipSpacingHorizontal="8dp" />
 
-        <Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save and Enter Venue" android:layout_marginTop="32dp" />
-
-        <Button
-            android:id="@+id/btnLogOut"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveProfile"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Log Out"
-            style="?attr/materialButtonOutlinedStyle"
+            android:layout_height="56dp"
+            android:layout_marginTop="40dp"
+            android:text="Save and Enter Venue"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/brand_primary"
+            app:cornerRadius="28dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogOut"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
             android:layout_marginTop="16dp"
+            android:text="Log Out"
+            android:textSize="16sp"
+            android:textColor="@color/brand_primary"
+            app:strokeColor="@color/brand_primary"
+            app:cornerRadius="28dp"
             android:visibility="gone" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDeleteAccount"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
             android:text="Delete Account"
+            android:textSize="16sp"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#D32F2F"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="32dp"
+            app:backgroundTint="@color/error_red"
+            app:cornerRadius="28dp"
             android:visibility="gone" />
 
     </LinearLayout>
