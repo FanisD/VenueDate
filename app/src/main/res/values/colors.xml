@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="brand_primary">#FF4B4B</color>
+    <color name="brand_primary_dark">#D13939</color>
+    <color name="brand_accent">#FFB703</color>
+    <color name="background_light">#FFFDFB</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="input_background">#F5F0EC</color>
+    <color name="text_primary">#2B2B2B</color>
+    <color name="text_secondary">#7A7571</color>
+    <color name="error_red">#E53935</color>
 </resources>
