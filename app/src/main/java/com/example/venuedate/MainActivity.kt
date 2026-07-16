@@ -106,6 +106,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Check if Firebase already has a saved user session
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // Fast-forward them straight to the app!
+            checkProfileStatus(currentUser.uid)
+        }
+    }
+
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential).addOnCompleteListener(this) { task ->
