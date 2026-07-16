@@ -16,11 +16,11 @@ class NearbyAdapter(
 ) : RecyclerView.Adapter<NearbyAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val ivThumb: ImageView = view.findViewById(R.id.ivUserThumb)
+        val ivThumb: ImageView = view.findViewById(R.id.ivUserImage)
         val tvName: TextView = view.findViewById(R.id.tvUserName)
-        val tvVibe: TextView = view.findViewById(R.id.tvUserVibe)
-        val tvBadge: TextView = view.findViewById(R.id.tvCompatibilityBadge) // ADDED
-        val btnTap: Button = view.findViewById(R.id.btnInterested)
+        val tvVibe: TextView = view.findViewById(R.id.tvUserContext)
+        val tvBadge: TextView = view.findViewById(R.id.tvCompatibility)
+        val btnTap: Button = view.findViewById(R.id.btnTap)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,7 +33,7 @@ class NearbyAdapter(
         holder.tvName.text = "${user.firstName}, ${user.age}"
         holder.tvVibe.text = user.vibeTag
 
-        // FIXED: Calculate compatibility and show/hide badge
+        // Calculate compatibility and show/hide badge
         if (myHobbies.isNotEmpty() && user.isCompatibilityModeActive) {
             val sharedCount = user.hobbies.intersect(myHobbies.toSet()).size
             if (sharedCount >= 7) {
