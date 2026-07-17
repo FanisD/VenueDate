@@ -41,7 +41,18 @@ class ProfileSetupActivity : AppCompatActivity() {
         if (uri != null) {
             imageUris[currentSlot] = uri
             val imageViewId = resources.getIdentifier("iv$currentSlot", "id", packageName)
-            findViewById<ImageView>(imageViewId).setImageURI(uri)
+            val imageView = findViewById<ImageView>(imageViewId)
+
+            // 1. Set the newly picked image
+            imageView.setImageURI(uri)
+
+            // 2. THE FIX: Explicitly remove the XML imageTintList!
+            imageView.imageTintList = null
+            imageView.clearColorFilter()
+            imageView.background = null
+
+            // 3. Make the photo zoom in perfectly to fill the card
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         }
     }
 
@@ -156,7 +167,19 @@ class ProfileSetupActivity : AppCompatActivity() {
                     currentUrls[index] = url
                     val imageViewId = resources.getIdentifier("iv$index", "id", packageName)
                     val imageView = findViewById<ImageView>(imageViewId)
-                    Glide.with(this).load(url).centerCrop().into(imageView)
+
+                    // Force remove the tint and background for existing downloaded photos too
+                    imageView.imageTintList = null // MUST have this for app:tint
+                    imageView.clearColorFilter()
+                    imageView.background = null
+
+                    Glide.with(this)
+                        .load(url)
+                        // THE FIX: Tell Glide to skip the cache and always fetch the newest photo
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .centerCrop()
+                        .into(imageView)
                 }
             }
         }
@@ -242,13 +265,20 @@ class ProfileSetupActivity : AppCompatActivity() {
             .setPositiveButton("Delete") { _, _ ->
                 val uid = auth.currentUser?.uid ?: return@setPositiveButton
 
-                // 1. Delete Firestore Document
+                // 1. Delete all 5 possible photos from Firebase Storage
+                for (i in 0..4) {
+                    val ref = storage.reference.child("profiles/$uid/img_$i.jpg")
+                    // We just call delete(). If the user only had 1 photo, deleting slots 1-4 will naturally fail silently in the background, which is perfectly fine!
+                    ref.delete()
+                }
+
+                // 2. Delete Firestore Document
                 db.collection("users").document(uid).delete().addOnSuccessListener {
 
-                    // 2. Delete Auth Profile
+                    // 3. Delete Auth Profile
                     auth.currentUser?.delete()?.addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(this, "Account deleted.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Account and data deleted.", Toast.LENGTH_SHORT).show()
                             startActivity(Intent(this, MainActivity::class.java).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             })

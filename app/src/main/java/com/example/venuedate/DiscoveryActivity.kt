@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.slider.Slider
@@ -51,7 +52,7 @@ class DiscoveryActivity : AppCompatActivity() {
 
     private val notifiedCompatibleUsers = mutableSetOf<String>()
 
-    // ADDED: Local cache tracking parameters for compatibility calculation matching
+    // Local cache tracking parameters for compatibility calculation matching
     private var myHobbies = listOf<String>()
 
     private var myBlockedUsers = listOf<String>()
@@ -87,7 +88,7 @@ class DiscoveryActivity : AppCompatActivity() {
             if (isChecked) checkLocationPermission() else stopLiveStatus()
         }
 
-        // ADDED: Compatibility Toggle Switch UI Binding Action
+        // Compatibility Toggle Switch UI Binding Action
         val switchComp = findViewById<SwitchMaterial>(R.id.switchCompatibilityMode)
         switchComp.setOnCheckedChangeListener { _, isChecked ->
             isCompatibilityModeActive = isChecked
@@ -102,9 +103,6 @@ class DiscoveryActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnInbox).setOnClickListener {
             startActivity(Intent(this, MatchesInboxActivity::class.java))
         }
-
-        // Fetch user preferences configuration on startup to validate compatibility switch conditions
-        checkUserHobbiesEligibility()
 
         // 4. Global system tracers
         listenForMatches()
@@ -129,7 +127,6 @@ class DiscoveryActivity : AppCompatActivity() {
                         Toast.makeText(this, "Appearance settings coming soon", Toast.LENGTH_SHORT).show()
                         true
                     }
-                    // FIXED: Log Out functionality
                     R.id.action_logout -> {
                         auth.signOut()
                         val intent = Intent(this, MainActivity::class.java).apply {
@@ -146,7 +143,13 @@ class DiscoveryActivity : AppCompatActivity() {
         }
     }
 
-    // ADDED: Verification algorithm gate confirming eligibility for Compatibility Mode
+    // ADDED: Using onResume instead of onCreate so this refreshes immediately when coming back from Edit Profile!
+    override fun onResume() {
+        super.onResume()
+        checkUserHobbiesEligibility()
+    }
+
+    // Verification algorithm gate confirming eligibility for Compatibility Mode
     private fun checkUserHobbiesEligibility() {
         val myUid = auth.currentUser?.uid ?: return
         db.collection("users").document(myUid).get().addOnSuccessListener { doc ->
@@ -166,11 +169,15 @@ class DiscoveryActivity : AppCompatActivity() {
                 }
                 adapter.updateMyHobbies(myHobbies)
 
-                // ADDED: Load the user's profile picture into the top-right menu button
+                // Load the user's profile picture into the top-right menu button
                 if (user.imageUrls.isNotEmpty()) {
                     val ivUserProfilePic = findViewById<ImageView>(R.id.ivUserProfilePic)
+
+                    // FIXED: Tell Glide to skip the cache so it always fetches the newest photo!
                     Glide.with(this)
                         .load(user.imageUrls[0])
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
                         .circleCrop()
                         .into(ivUserProfilePic)
                 }
