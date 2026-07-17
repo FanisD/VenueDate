@@ -265,13 +265,20 @@ class ProfileSetupActivity : AppCompatActivity() {
             .setPositiveButton("Delete") { _, _ ->
                 val uid = auth.currentUser?.uid ?: return@setPositiveButton
 
-                // 1. Delete Firestore Document
+                // 1. Delete all 5 possible photos from Firebase Storage
+                for (i in 0..4) {
+                    val ref = storage.reference.child("profiles/$uid/img_$i.jpg")
+                    // We just call delete(). If the user only had 1 photo, deleting slots 1-4 will naturally fail silently in the background, which is perfectly fine!
+                    ref.delete()
+                }
+
+                // 2. Delete Firestore Document
                 db.collection("users").document(uid).delete().addOnSuccessListener {
 
-                    // 2. Delete Auth Profile
+                    // 3. Delete Auth Profile
                     auth.currentUser?.delete()?.addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(this, "Account deleted.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Account and data deleted.", Toast.LENGTH_SHORT).show()
                             startActivity(Intent(this, MainActivity::class.java).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             })
