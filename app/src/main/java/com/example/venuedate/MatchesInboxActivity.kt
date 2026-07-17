@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.widget.ImageButton
 
 class MatchesInboxActivity : AppCompatActivity() {
 
@@ -17,6 +18,7 @@ class MatchesInboxActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_matches_inbox)
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
 
         val myUid = auth.currentUser?.uid ?: return
 
