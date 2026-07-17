@@ -43,13 +43,15 @@ class ProfileSetupActivity : AppCompatActivity() {
             val imageViewId = resources.getIdentifier("iv$currentSlot", "id", packageName)
             val imageView = findViewById<ImageView>(imageViewId)
 
-            // 1. Set the image
+            // 1. Set the newly picked image
             imageView.setImageURI(uri)
 
-            // 2. Remove the white tint so we can actually see the photo!
+            // 2. THE FIX: Explicitly remove the XML imageTintList!
             imageView.imageTintList = null
+            imageView.clearColorFilter()
+            imageView.background = null
 
-            // 3. Make the photo zoom in perfectly to fill the rounded card
+            // 3. Make the photo zoom in perfectly to fill the card
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         }
     }
@@ -165,7 +167,19 @@ class ProfileSetupActivity : AppCompatActivity() {
                     currentUrls[index] = url
                     val imageViewId = resources.getIdentifier("iv$index", "id", packageName)
                     val imageView = findViewById<ImageView>(imageViewId)
-                    Glide.with(this).load(url).centerCrop().into(imageView)
+
+                    // Force remove the tint and background for existing downloaded photos too
+                    imageView.imageTintList = null // MUST have this for app:tint
+                    imageView.clearColorFilter()
+                    imageView.background = null
+
+                    Glide.with(this)
+                        .load(url)
+                        // THE FIX: Tell Glide to skip the cache and always fetch the newest photo
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .centerCrop()
+                        .into(imageView)
                 }
             }
         }
