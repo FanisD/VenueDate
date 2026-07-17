@@ -41,7 +41,16 @@ class ProfileSetupActivity : AppCompatActivity() {
         if (uri != null) {
             imageUris[currentSlot] = uri
             val imageViewId = resources.getIdentifier("iv$currentSlot", "id", packageName)
-            findViewById<ImageView>(imageViewId).setImageURI(uri)
+            val imageView = findViewById<ImageView>(imageViewId)
+
+            // 1. Set the image
+            imageView.setImageURI(uri)
+
+            // 2. Remove the white tint so we can actually see the photo!
+            imageView.imageTintList = null
+
+            // 3. Make the photo zoom in perfectly to fill the rounded card
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         }
     }
 
