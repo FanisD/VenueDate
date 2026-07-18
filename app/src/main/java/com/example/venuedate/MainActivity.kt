@@ -17,6 +17,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import android.view.View
 
 class MainActivity : AppCompatActivity() {
 
@@ -108,11 +109,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        // Check if Firebase already has a saved user session
+        // The loading screen is VISIBLE by default from the XML
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Fast-forward them straight to the app!
+            // Keep the loading screen up and check their profile!
             checkProfileStatus(currentUser.uid)
+        } else {
+            // Not logged in? Hide the loading screen so they can type their email
+            findViewById<View>(R.id.layoutLoading).visibility = View.GONE
         }
     }
 
@@ -134,6 +138,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, ProfileSetupActivity::class.java))
                 finish()
             }
+        }.addOnFailureListener {
+            // If the network fails, hide the loading screen so they aren't stuck
+            findViewById<View>(R.id.layoutLoading).visibility = View.GONE
+            Toast.makeText(this, "Network Error: Could not load profile", Toast.LENGTH_SHORT).show()
         }
     }
 }
