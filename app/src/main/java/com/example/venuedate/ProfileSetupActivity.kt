@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
+import kotlin.jvm.java
 
 class ProfileSetupActivity : AppCompatActivity() {
 
@@ -65,6 +66,7 @@ class ProfileSetupActivity : AppCompatActivity() {
         val btnSave = findViewById<Button>(R.id.btnSaveProfile)
         val btnLogOut = findViewById<Button>(R.id.btnLogOut)
         val btnDelete = findViewById<Button>(R.id.btnDeleteAccount)
+        val btnBlockedUsers = findViewById<Button>(R.id.btnBlockedUsers)
 
         // Setup Spinners
         val genders = arrayOf("Male", "Female", "Other")
@@ -110,7 +112,12 @@ class ProfileSetupActivity : AppCompatActivity() {
             btnSave.text = "Save Changes"
             btnLogOut.visibility = View.VISIBLE
             btnDelete.visibility = View.VISIBLE
+            btnBlockedUsers.visibility = View.VISIBLE
             loadExistingData()
+        }
+
+        btnBlockedUsers.setOnClickListener {
+            startActivity(Intent(this, BlockedUsersActivity::class.java))
         }
 
         btnSave.setOnClickListener {
