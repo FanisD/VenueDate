@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
+import kotlin.jvm.java
 
 class ProfileSetupActivity : AppCompatActivity() {
 
@@ -65,6 +66,7 @@ class ProfileSetupActivity : AppCompatActivity() {
         val btnSave = findViewById<Button>(R.id.btnSaveProfile)
         val btnLogOut = findViewById<Button>(R.id.btnLogOut)
         val btnDelete = findViewById<Button>(R.id.btnDeleteAccount)
+        val btnBlockedUsers = findViewById<Button>(R.id.btnBlockedUsers)
 
         // Setup Spinners
         val genders = arrayOf("Male", "Female", "Other")
@@ -110,7 +112,12 @@ class ProfileSetupActivity : AppCompatActivity() {
             btnSave.text = "Save Changes"
             btnLogOut.visibility = View.VISIBLE
             btnDelete.visibility = View.VISIBLE
+            btnBlockedUsers.visibility = View.VISIBLE
             loadExistingData()
+        }
+
+        btnBlockedUsers.setOnClickListener {
+            startActivity(Intent(this, BlockedUsersActivity::class.java))
         }
 
         btnSave.setOnClickListener {
@@ -263,28 +270,27 @@ class ProfileSetupActivity : AppCompatActivity() {
             .setTitle("Delete Account")
             .setMessage("Are you sure? This action is permanent and cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
-                val uid = auth.currentUser?.uid ?: return@setPositiveButton
+                val user = auth.currentUser
+                val uid = user?.uid ?: return@setPositiveButton
 
-                // 1. Delete all 5 possible photos from Firebase Storage
+                Toast.makeText(this, "Deleting account...", Toast.LENGTH_SHORT).show()
+
+                // 1. Instantly redirect the user to the Login screen so they don't have to wait
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
+
+                // 2. Do the heavy lifting in the background
+                // Delete photos
                 for (i in 0..4) {
-                    val ref = storage.reference.child("profiles/$uid/img_$i.jpg")
-                    // We just call delete(). If the user only had 1 photo, deleting slots 1-4 will naturally fail silently in the background, which is perfectly fine!
-                    ref.delete()
+                    storage.reference.child("profiles/$uid/img_$i.jpg").delete()
                 }
 
-                // 2. Delete Firestore Document
-                db.collection("users").document(uid).delete().addOnSuccessListener {
-
-                    // 3. Delete Auth Profile
-                    auth.currentUser?.delete()?.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(this, "Account and data deleted.", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this, MainActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            })
-                        } else {
-                            Toast.makeText(this, "Session expired. Log out and back in to delete.", Toast.LENGTH_LONG).show()
-                        }
+                // Delete Firestore profile, THEN delete Auth profile
+                db.collection("users").document(uid).delete().addOnCompleteListener {
+                    user.delete().addOnCompleteListener {
+                        // Once everything is wiped from the servers, ensure the local cache is signed out
+                        auth.signOut()
                     }
                 }
             }

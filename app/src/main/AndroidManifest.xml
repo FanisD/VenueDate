@@ -23,6 +23,11 @@
             android:name=".ProfileSetupActivity"
             android:exported="false" />
         <activity
+            android:name=".BlockedUsersActivity"/>
+        <activity
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
