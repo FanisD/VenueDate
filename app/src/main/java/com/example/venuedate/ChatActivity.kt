@@ -240,6 +240,37 @@ class ChatActivity : AppCompatActivity() {
             }
     }
 
+    private fun reportUser(reportedUid: String, reportedEmail: String) {
+        val db = FirebaseFirestore.getInstance()
+        val reporterUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        // 1. Log the report in the database for you to see
+        val reportData = hashMapOf(
+            "reporter" to reporterUid,
+            "reportedUser" to reportedUid,
+            "timestamp" to System.currentTimeMillis()
+        )
+        db.collection("reports").add(reportData)
+
+        // 2. Increment the bad user's strike counter
+        val userRef = db.collection("users").document(reportedUid)
+        userRef.update("reportCount", com.google.firebase.firestore.FieldValue.increment(1)).addOnFailureListener {
+            // If they have 0 reports so far, initialize it to 1
+            userRef.set(hashMapOf("reportCount" to 1), com.google.firebase.firestore.SetOptions.merge())
+        }
+
+        // 3. Check if they hit 3 strikes
+        userRef.get().addOnSuccessListener { doc ->
+            val currentReports = doc.getLong("reportCount") ?: 1L
+            if (currentReports >= 3L) {
+                // STRIKE 3: Add their email to the blacklist and vaporize their profile
+                db.collection("banned_emails").document(reportedEmail).set(hashMapOf("bannedAt" to System.currentTimeMillis()))
+                userRef.delete()
+            }
+            Toast.makeText(this, "User reported. Thank you for keeping the community safe.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         messageListener?.remove()

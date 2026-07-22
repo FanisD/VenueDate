@@ -130,18 +130,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkProfileStatus(uid: String) {
-        db.collection("users").document(uid).get().addOnSuccessListener { doc ->
-            if (doc.exists() && !doc.getString("firstName").isNullOrEmpty()) {
-                startActivity(Intent(this, DiscoveryActivity::class.java))
-                finish()
+        val userEmail = auth.currentUser?.email ?: ""
+
+        // 1. Check if the user is on the blacklist first
+        db.collection("banned_emails").document(userEmail).get().addOnSuccessListener { banDoc ->
+            if (banDoc.exists()) {
+                // BOOT THEM OUT
+                Toast.makeText(this, "This account has been permanently banned.", Toast.LENGTH_LONG).show()
+                auth.signOut()
+                findViewById<View>(R.id.layoutLoading).visibility = View.GONE
             } else {
-                startActivity(Intent(this, ProfileSetupActivity::class.java))
-                finish()
+                // 2. Normal profile check if they are not banned
+                db.collection("users").document(uid).get().addOnSuccessListener { doc ->
+                    if (doc.exists() && !doc.getString("firstName").isNullOrEmpty()) {
+                        startActivity(Intent(this, DiscoveryActivity::class.java))
+                        finish()
+                    } else {
+                        startActivity(Intent(this, ProfileSetupActivity::class.java))
+                        finish()
+                    }
+                }.addOnFailureListener {
+                    findViewById<View>(R.id.layoutLoading).visibility = View.GONE
+                    Toast.makeText(this, "Network Error: Could not load profile", Toast.LENGTH_SHORT).show()
+                }
             }
-        }.addOnFailureListener {
-            // If the network fails, hide the loading screen so they aren't stuck
-            findViewById<View>(R.id.layoutLoading).visibility = View.GONE
-            Toast.makeText(this, "Network Error: Could not load profile", Toast.LENGTH_SHORT).show()
         }
     }
 }
