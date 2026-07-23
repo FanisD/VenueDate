@@ -1,6 +1,5 @@
 package com.example.venuedate
 
-import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -20,6 +19,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 
 class ChatActivity : AppCompatActivity() {
 
@@ -49,8 +49,9 @@ class ChatActivity : AppCompatActivity() {
         val btnSend = findViewById<ImageButton>(R.id.btnSend)
         val tvCountdown = findViewById<TextView>(R.id.tvCountdown)
 
-        // ADDED: Bind the Report/Block button
-        val btnReportBlock = findViewById<ImageButton>(R.id.btnReportBlock)
+        // NEW HEADER BUTTONS
+        val btnBack = findViewById<ImageButton>(R.id.btnBack)
+        val btnOptions = findViewById<ImageButton>(R.id.btnOptions)
 
         adapter = MessageAdapter(messages, auth.currentUser?.uid ?: "")
         rvMessages.layoutManager = LinearLayoutManager(this)
@@ -77,9 +78,31 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        // ADDED: Trigger safety options dialog when the flag is clicked
-        btnReportBlock.setOnClickListener {
-            showReportBlockDialog()
+        // 1. Back Button Action
+        btnBack.setOnClickListener {
+            finish()
+        }
+
+        // 2. Options Menu (3-dot icon) Action
+        btnOptions.setOnClickListener { view ->
+            val popup = PopupMenu(this, view)
+            popup.menu.add(0, 1, 0, "Report User")
+            popup.menu.add(0, 2, 0, "Block User")
+
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> {
+                        reportUser()
+                        true
+                    }
+                    2 -> {
+                        blockUser()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
         }
     }
 
@@ -194,36 +217,43 @@ class ChatActivity : AppCompatActivity() {
     // TRUST & SAFETY FUNCTIONS (BLOCK / REPORT)
     // ------------------------------------------------------------------------
 
-    private fun showReportBlockDialog() {
-        val options = arrayOf("Report for Inappropriate Behavior", "Block User", "Cancel")
-
-        AlertDialog.Builder(this)
-            .setTitle("Safety Options")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> submitReport()
-                    1 -> blockUser()
-                    // 2 is Cancel, which does nothing and dismisses automatically
-                }
-            }
-            .show()
-    }
-
-    private fun submitReport() {
+    private fun reportUser() {
         val myUid = auth.currentUser?.uid ?: return
-        val target = partnerUid ?: return
+        val targetUid = partnerUid ?: return
 
-        val reportData = hashMapOf(
-            "reporter" to myUid,
-            "reportedUser" to target,
-            "reason" to "Inappropriate Behavior",
-            "timestamp" to System.currentTimeMillis()
-        )
+        // Fetch their email first so we can ban them if they hit 3 strikes
+        db.collection("users").document(targetUid).get().addOnSuccessListener { doc ->
+            val targetEmail = doc.getString("email") ?: "unknown"
 
-        db.collection("reports").add(reportData).addOnSuccessListener {
-            Toast.makeText(this, "Report submitted to admins.", Toast.LENGTH_SHORT).show()
-            // Standard practice: auto-block someone after reporting them
-            blockUser()
+            // 1. Log the report in the database for admins to see
+            val reportData = hashMapOf(
+                "reporter" to myUid,
+                "reportedUser" to targetUid,
+                "reason" to "Inappropriate Behavior",
+                "timestamp" to System.currentTimeMillis()
+            )
+            db.collection("reports").add(reportData)
+
+            // 2. Increment the bad user's strike counter
+            val userRef = db.collection("users").document(targetUid)
+            userRef.update("reportCount", FieldValue.increment(1)).addOnFailureListener {
+                // If they have 0 reports so far, initialize it to 1
+                userRef.set(hashMapOf("reportCount" to 1), SetOptions.merge())
+            }
+
+            // 3. Check if they hit 3 strikes
+            userRef.get().addOnSuccessListener { strikeDoc ->
+                val currentReports = strikeDoc.getLong("reportCount") ?: 1L
+                if (currentReports >= 3L && targetEmail != "unknown") {
+                    // STRIKE 3: Add their email to the blacklist and vaporize their profile
+                    db.collection("banned_emails").document(targetEmail).set(hashMapOf("bannedAt" to System.currentTimeMillis()))
+                    userRef.delete()
+                }
+
+                Toast.makeText(this, "User reported. Thank you for keeping the community safe.", Toast.LENGTH_SHORT).show()
+                // Auto-block the user so they disappear immediately
+                blockUser()
+            }
         }
     }
 
@@ -236,39 +266,8 @@ class ChatActivity : AppCompatActivity() {
             .update("blockedUsers", FieldValue.arrayUnion(target))
             .addOnSuccessListener {
                 Toast.makeText(this, "User blocked. You will no longer see them.", Toast.LENGTH_LONG).show()
-                finish() // Kicks the user out of the chat screen
+                finish() // Kicks the user out of the chat screen and back to safety
             }
-    }
-
-    private fun reportUser(reportedUid: String, reportedEmail: String) {
-        val db = FirebaseFirestore.getInstance()
-        val reporterUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        // 1. Log the report in the database for you to see
-        val reportData = hashMapOf(
-            "reporter" to reporterUid,
-            "reportedUser" to reportedUid,
-            "timestamp" to System.currentTimeMillis()
-        )
-        db.collection("reports").add(reportData)
-
-        // 2. Increment the bad user's strike counter
-        val userRef = db.collection("users").document(reportedUid)
-        userRef.update("reportCount", com.google.firebase.firestore.FieldValue.increment(1)).addOnFailureListener {
-            // If they have 0 reports so far, initialize it to 1
-            userRef.set(hashMapOf("reportCount" to 1), com.google.firebase.firestore.SetOptions.merge())
-        }
-
-        // 3. Check if they hit 3 strikes
-        userRef.get().addOnSuccessListener { doc ->
-            val currentReports = doc.getLong("reportCount") ?: 1L
-            if (currentReports >= 3L) {
-                // STRIKE 3: Add their email to the blacklist and vaporize their profile
-                db.collection("banned_emails").document(reportedEmail).set(hashMapOf("bannedAt" to System.currentTimeMillis()))
-                userRef.delete()
-            }
-            Toast.makeText(this, "User reported. Thank you for keeping the community safe.", Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onDestroy() {

@@ -273,23 +273,47 @@ class ProfileSetupActivity : AppCompatActivity() {
                 val user = auth.currentUser
                 val uid = user?.uid ?: return@setPositiveButton
 
-                Toast.makeText(this, "Deleting account...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Deleting account and cleaning data...", Toast.LENGTH_SHORT).show()
 
-                // 1. Instantly redirect the user to the Login screen so they don't have to wait
+                // 1. Immediately redirect to login screen
                 startActivity(Intent(this, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
 
-                // 2. Do the heavy lifting in the background
-                // Delete photos
+                // 2. Delete Storage Photos
                 for (i in 0..4) {
                     storage.reference.child("profiles/$uid/img_$i.jpg").delete()
                 }
 
-                // Delete Firestore profile, THEN delete Auth profile
+                // 3. Clean up Matches where this user is listed
+                db.collection("matches").whereArrayContains("users", uid).get().addOnSuccessListener { snapshot ->
+                    for (doc in snapshot.documents) {
+                        doc.reference.delete()
+                    }
+                }
+
+                // 4. Clean up Reports created by this user
+                db.collection("reports").whereEqualTo("reporter", uid).get().addOnSuccessListener { snapshot ->
+                    for (doc in snapshot.documents) {
+                        doc.reference.delete()
+                    }
+                }
+
+                // 5. Clean up Taps/Interests sent by or to this user
+                db.collectionGroup("taps").whereEqualTo("from", uid).get().addOnSuccessListener { snapshot ->
+                    for (doc in snapshot.documents) {
+                        doc.reference.delete()
+                    }
+                }
+                db.collectionGroup("taps").whereEqualTo("to", uid).get().addOnSuccessListener { snapshot ->
+                    for (doc in snapshot.documents) {
+                        doc.reference.delete()
+                    }
+                }
+
+                // 6. Delete Main User Document & Auth Profile
                 db.collection("users").document(uid).delete().addOnCompleteListener {
                     user.delete().addOnCompleteListener {
-                        // Once everything is wiped from the servers, ensure the local cache is signed out
                         auth.signOut()
                     }
                 }
