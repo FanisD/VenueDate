@@ -1,34 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/background_light">
 
-    <LinearLayout
-        android:id="@+id/llTimer"
+    <!-- HEADER BAR -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FF4081"
-        android:padding="8dp"
-        android:gravity="center"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        android:padding="8dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF"
+            android:contentDescription="Go Back" />
+
         <TextView
             android:id="@+id/tvCountdown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:text="Time left: 20:00"
             android:textColor="#FFFFFF"
             android:textStyle="bold" />
-    </LinearLayout>
 
+        <ImageButton
+            android:id="@+id/btnOptions"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_moreoverflow"
+            app:tint="#FFFFFF"
+            android:contentDescription="Options" />
+    </RelativeLayout>
+
+    <!-- CHAT MESSAGES -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMessages"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/llInput"
-        android:layout_below="@id/llTimer"
-        android:padding="8dp" />
+        android:layout_below="@id/rlHeader"
+        android:padding="8dp"
+        android:clipToPadding="false" />
 
+    <!-- BOTTOM INPUT BAR -->
     <LinearLayout
         android:id="@+id/llInput"
         android:layout_width="match_parent"
@@ -37,7 +65,7 @@
         android:orientation="horizontal"
         android:padding="8dp"
         android:background="#F5F5F5"
-        android:windowSoftInputMode="adjustResize">
+        android:gravity="center_vertical">
 
         <EditText
             android:id="@+id/etMessage"
@@ -46,23 +74,16 @@
             android:layout_weight="1"
             android:hint="Say hi..."
             android:background="@null"
-            android:minHeight="48dp"/>
+            android:minHeight="48dp"
+            android:paddingHorizontal="16dp"/>
 
         <ImageButton
             android:id="@+id/btnSend"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@android:drawable/ic_menu_send"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Send Message" />
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/btnReportBlock"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="end|top"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_report_image"
-        android:contentDescription="Report or Block User"
-        app:tint="#FF0000" />
 </RelativeLayout>
